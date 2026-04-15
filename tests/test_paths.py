@@ -8,11 +8,9 @@ def test_png_path_naming():
     assert p.parent == CACHE_DIR
 
 def test_ensure_dirs_creates_directories(tmp_path, monkeypatch):
-    monkeypatch.setattr("shared.paths.CONFIG_DIR", tmp_path / "dashboard")
-    monkeypatch.setattr("shared.paths.CACHE_DIR", tmp_path / "dashboard" / "cache")
-    from shared import paths
-    paths.CONFIG_DIR = tmp_path / "dashboard"
-    paths.CACHE_DIR = tmp_path / "dashboard" / "cache"
+    import shared.paths as paths
+    monkeypatch.setattr(paths, "CONFIG_DIR", tmp_path / "dashboard")
+    monkeypatch.setattr(paths, "CACHE_DIR", tmp_path / "dashboard" / "cache")
     paths.ensure_dirs()
     assert paths.CONFIG_DIR.exists()
     assert paths.CACHE_DIR.exists()
