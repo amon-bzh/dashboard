@@ -1,4 +1,3 @@
-import struct
 from pathlib import Path
 import pytest
 from daemon.renderer import render_chart, render_error_chart
