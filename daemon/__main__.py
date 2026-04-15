@@ -7,7 +7,7 @@ import signal
 from daemon.fetcher import fetch_rates
 from daemon.renderer import render_chart, render_error_chart
 from logs.logger import get_logger
-from shared.config import load_config
+from shared.config import DashboardConfig, load_config
 from shared.paths import PID_FILE, ensure_dirs, png_path
 
 logger = get_logger("daemon")
@@ -31,7 +31,7 @@ async def generate_png(pair: str, scale: str) -> None:
         render_error_chart(pair, str(exc), path)
 
 
-async def generate_all(config) -> None:
+async def generate_all(config: DashboardConfig) -> None:
     tasks = [generate_png(w.pair, w.scale) for w in config.widgets]
     await asyncio.gather(*tasks)
 
