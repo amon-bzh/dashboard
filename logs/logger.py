@@ -23,10 +23,10 @@ def get_logger(component: str) -> logging.Logger:
     level = getattr(logging, level_name, logging.INFO)
 
     logger = logging.getLogger(f"dashboard.{component}")
+    logger.setLevel(level)
     if logger.handlers:
         return logger
 
-    logger.setLevel(level)
     handler = RotatingFileHandler(LOG_FILE, maxBytes=1_000_000, backupCount=3)
     handler.setFormatter(
         logging.Formatter(f"%(asctime)s [{component}] %(levelname)s %(message)s")
