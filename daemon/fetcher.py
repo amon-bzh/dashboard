@@ -27,8 +27,7 @@ async def fetch_rates(pair: str, scale: str) -> Dict[str, float]:
     async with httpx.AsyncClient(timeout=10.0) as client:
         response = await client.get(url, params={"from": base, "to": quote})
         response.raise_for_status()
-
-    data = response.json()
+        data = response.json()
     return {d: rates[quote] for d, rates in data["rates"].items()}
 
 
@@ -40,4 +39,4 @@ async def fetch_current_rate(pair: str) -> float:
             f"{BASE_URL}/latest", params={"from": base, "to": quote}
         )
         response.raise_for_status()
-    return float(response.json()["rates"][quote])
+        return float(response.json()["rates"][quote])
