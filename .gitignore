@@ -1,0 +1,24 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# Logs temporaires
+inputs/.remember/logs/
+inputs/.remember/tmp/
+
+# Config locale Claude
+inputs/.claude/settings.local.json
+
+# macOS
+.DS_Store
+
+# Cache pytest
+.pytest_cache/
+.coverage
