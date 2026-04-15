@@ -12,12 +12,19 @@ Dashboard TUI interactif de suivi de risque de change en temps différé. L'appl
 
 ## Reprise du travail
 
-Le code applicatif est à créer dans le répertoire **parent** (`../`) — ce dépôt `inputs/` contient uniquement les documents de conception. Pour exécuter le plan :
+Le code applicatif est dans le répertoire **parent** (`/Users/Antoine/Developer/dashboard/`), branche `feature/dashboard-tui`.
+
+**Avancement :** Tasks 1–7 complètes (13 tests ✅). Reprendre à la **Task 8**.
 
 ```
 Utiliser le skill superpowers:subagent-driven-development
-en partant de la Task 1 du plan docs/superpowers/plans/2026-04-14-dashboard-tui.md
+en partant de la Task 8 du plan docs/superpowers/plans/2026-04-14-dashboard-tui.md
 ```
+
+**Précisions sur la structure du repo :**
+- Le repo git est à la racine `/Users/Antoine/Developer/dashboard/` (pas dans `inputs/`)
+- `requirements.txt` = dépendances runtime uniquement
+- `requirements-dev.txt` = runtime + pytest (utiliser pour les tests)
 
 ## Stack technique (décisions validées)
 
@@ -52,9 +59,9 @@ logs/logger.py  (RotatingFileHandler, DASHBOARD_LOG_LEVEL)
 ## Commandes de développement
 
 ```bash
-# Environnement virtuel
-python3.12 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+# Environnement virtuel (déjà créé — se placer dans /Users/Antoine/Developer/dashboard/)
+source .venv/bin/activate
+pip install -r requirements-dev.txt   # inclut pytest + pytest-asyncio
 
 # Lancer le TUI
 dashboard                          # via symlink /usr/local/bin/dashboard
