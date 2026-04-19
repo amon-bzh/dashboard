@@ -70,9 +70,10 @@ pytest
 pytest tests/test_fetcher.py::test_fetch_rates_returns_date_rate_dict -v
 
 # Launchd
-launchctl load ~/Library/LaunchAgents/com.user.dashboard.plist
-launchctl start com.user.dashboard
-launchctl stop com.user.dashboard
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.user.dashboard.plist
+launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/com.user.dashboard.plist
+launchctl kickstart -k gui/$(id -u)/com.user.dashboard   # restart
+launchctl kill SIGTERM gui/$(id -u)/com.user.dashboard   # stop
 ```
 
 ## Gotchas Textual (découverts en session)

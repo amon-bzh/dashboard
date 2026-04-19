@@ -45,7 +45,7 @@ pip install -r requirements.txt
 
 # 2. Installer et démarrer le daemon
 cp com.user.dashboard.plist ~/Library/LaunchAgents/
-launchctl load ~/Library/LaunchAgents/com.user.dashboard.plist
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.user.dashboard.plist
 
 # 3. Créer le symlink pour lancer le TUI depuis n'importe où
 ln -sf "$(pwd)/bin/dashboard" /usr/local/bin/dashboard
