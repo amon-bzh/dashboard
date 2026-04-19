@@ -25,3 +25,19 @@ async def test_currency_widget_mounts(tmp_path, monkeypatch):
         await pilot.app.query_one("#grid", Grid).mount(widget)
         await pilot.pause()
         assert pilot.app.query_one(CurrencyWidget)
+
+
+@pytest.mark.asyncio
+async def test_context_menu_appears_on_key_m():
+    from tui.widgets.context_menu import ContextMenu
+    from tui.widgets.currency_widget import CurrencyWidget
+    app = DashboardApp()
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        widgets = list(pilot.app.query(CurrencyWidget))
+        if widgets:
+            widgets[0].focus()
+            await pilot.press("m")
+            await pilot.pause()
+            menus = list(pilot.app.query(ContextMenu))
+            assert len(menus) == 1

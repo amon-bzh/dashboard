@@ -107,3 +107,20 @@ class CurrencyWidget(Widget):
         color = "green" if variation >= 0 else "red"
         label = self.query_one(f"#rate-{id(self)}", Label)
         label.update(f"{rate:.4f}  [{color}]{sign}{variation:.2f}%[/]")
+
+    BINDINGS = [("m", "open_menu", "Menu")]
+
+    def action_open_menu(self) -> None:
+        from tui.widgets.context_menu import ContextMenu
+        self.app.mount(ContextMenu())
+
+    def on_context_menu_delete_widget(self) -> None:
+        self.remove()
+
+    def on_context_menu_change_scale(self) -> None:
+        # Implémenté en Task 13
+        pass
+
+    def on_context_menu_edit_pair(self) -> None:
+        # Implémenté en Task 13
+        pass
