@@ -6,14 +6,54 @@ from pathlib import Path
 from rich.segment import Segment
 from rich.style import Style
 from textual.app import ComposeResult
+from textual.screen import ModalScreen
 from textual.strip import Strip
 from textual.widget import Widget
-from textual.widgets import Label
+from textual.widgets import Button, Input, Label, Select
 
 from logs.logger import get_logger
 from shared.paths import png_path
 
 logger = get_logger("tui")
+
+
+class _EditPairModal(ModalScreen):
+    DEFAULT_CSS = """
+    _EditPairModal {
+        align: center middle;
+    }
+    #modal-box {
+        border: solid $border;
+        background: $surface;
+        padding: 1 2;
+        width: 40;
+        height: auto;
+    }
+    """
+
+    def __init__(self, current_pair: str, current_scale: str, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self._pair = current_pair
+        self._scale = current_scale
+
+    def compose(self) -> ComposeResult:
+        from textual.containers import Vertical
+        with Vertical(id="modal-box"):
+            yield Label("Paire (ex: EUR/USD)")
+            yield Input(value=self._pair, id="new-pair")
+            yield Label("Échelle")
+            yield Select(
+                [(s, s) for s in ["1M", "3M", "6M", "1A", "2A", "5A"]],
+                value=self._scale,
+                id="new-scale",
+            )
+            yield Button("Valider", id="btn-ok", variant="primary")
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "btn-ok":
+            new_pair = self.query_one("#new-pair", Input).value.strip().upper()
+            new_scale = self.query_one("#new-scale", Select).value
+            self.dismiss((new_pair, new_scale))
 
 
 class ChartDisplay(Widget):
@@ -117,10 +157,30 @@ class CurrencyWidget(Widget):
     def on_context_menu_delete_widget(self) -> None:
         self.remove()
 
-    def on_context_menu_change_scale(self) -> None:
-        # Implémenté en Task 13
-        pass
-
     def on_context_menu_edit_pair(self) -> None:
-        # Implémenté en Task 13
-        pass
+        async def _handle_result(result) -> None:
+            if result:
+                new_pair, new_scale = result
+                self.pair = new_pair
+                self.scale = new_scale
+                self._png_path = png_path(new_pair, new_scale)
+                self._last_mtime = 0.0
+                self.query_one(".header", Label).update(f"{new_pair} · {new_scale}")
+                self._update_config()
+                from shared.config import notify_daemon
+                notify_daemon()
+
+        self.app.push_screen(_EditPairModal(self.pair, self.scale), _handle_result)
+
+    def _update_config(self) -> None:
+        from shared.config import load_config, save_config, WidgetConfig
+        from tui.widgets.currency_widget import CurrencyWidget
+        config = load_config()
+        config.widgets = [
+            WidgetConfig(w.pair, w.scale)
+            for w in self.app.query(CurrencyWidget)
+        ]
+        save_config(config)
+
+    def on_context_menu_change_scale(self) -> None:
+        self.on_context_menu_edit_pair()
