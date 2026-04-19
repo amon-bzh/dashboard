@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.user.dashboard</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/Antoine/Developer/dashboard/.venv/bin/python</string>
+        <string>-m</string>
+        <string>daemon</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/Antoine/Developer/dashboard</string>
+    <key>StandardOutPath</key>
+    <string>/Users/Antoine/.config/dashboard/daemon-stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/Antoine/.config/dashboard/daemon-stderr.log</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>DASHBOARD_LOG_LEVEL</key>
+        <string>INFO</string>
+    </dict>
+</dict>
+</plist>
