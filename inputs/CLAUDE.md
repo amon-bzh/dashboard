@@ -82,6 +82,11 @@ launchctl kill SIGTERM gui/$(id -u)/com.user.dashboard   # stop
 - **layer: overlay** : nécessite `layers: base overlay;` déclaré dans le CSS de `Screen`, sinon le widget overlay est invisible derrière la grille.
 - **pilot.type()** : absent dans Textual ≤ 0.82 — pour les tests, manipuler `Input.value` directement et appeler le handler explicitement.
 - **readlink -f** : non disponible sur macOS — utiliser `pwd -P` dans les scripts bash.
+- **Version Textual installée :** `8.2.3` — le décorateur `@work` n'existe pas ; utiliser `self.run_worker(coroutine(), name=..., exclusive=...)`.
+- **f-string dans DEFAULT_CSS :** si on utilise une f-string pour injecter des constantes de couleur, toutes les accolades CSS doivent être doublées (`{{` / `}}`).
+- **render_line + séquence iTerm2 :** injecter la séquence OSC dans un `Segment` Rich cause des artefacts ANSI (Rich mesure la longueur base64 et tronque). Solution validée : écrire via `sys.stdout.write(cursor_pos + seq)` après avoir positionné le curseur avec `region = self.content_region` → `\x1b[{region.y+1};{region.x+1}H`.
+- **Widget focusable :** `can_focus = True` sur la classe + sélecteur CSS `:focus` pour styler la bordure active. Tab/Shift+Tab sont gérés automatiquement par Textual.
+- **Anti-doublon ContextMenu :** avant `self.mount(ContextMenu())`, faire `self.query(ContextMenu)` et retourner si non vide ; ajouter `on_key` avec `event.key == "escape"` dans le menu pour le fermer.
 
 ## Conventions importantes
 
@@ -96,8 +101,4 @@ launchctl kill SIGTERM gui/$(id -u)/com.user.dashboard   # stop
 
 ## Rendu iTerm2 — note d'implémentation
 
-Le widget `ChartDisplay` utilise `render_line()` pour injecter la séquence OSC iTerm2 :
-```
-ESC ] 1337 ; File=inline=1;width=Wchar;height=Hchar;<base64> BEL
-```
-Si ce rendu ne fonctionne pas dans le contexte Textual, le fallback est `rich-pixels` + `Pillow` (documenté en fin du plan d'implémentation).
+`ChartDisplay` n'utilise plus `render_line()` (cassé : Rich mesure la longueur base64 et corrompt le terminal). La séquence OSC est envoyée via `sys.stdout.write` avec positionnement curseur explicite (`on_mount` + `refresh_chart`). Si le rendu reste instable, fallback : `rich-pixels` + `Pillow`.

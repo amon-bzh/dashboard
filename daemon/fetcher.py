@@ -5,7 +5,7 @@ from typing import Dict
 import httpx
 from dateutil.relativedelta import relativedelta
 
-BASE_URL = "https://api.frankfurter.app"
+BASE_URL = "https://api.frankfurter.dev/v1"
 
 SCALES: Dict[str, relativedelta] = {
     "1M": relativedelta(months=1),
