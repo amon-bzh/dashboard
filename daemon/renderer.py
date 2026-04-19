@@ -23,6 +23,9 @@ def render_chart(
     dates = [datetime.strptime(d, "%Y-%m-%d") for d in sorted_dates]
     values = [rates[d] for d in sorted_dates]
 
+    if not values:
+        raise ValueError(f"Aucune donnée disponible pour {pair} {scale}")
+
     color = _GREEN if values[-1] >= values[0] else _RED
 
     fig, ax = plt.subplots(figsize=(8, 3), dpi=100)

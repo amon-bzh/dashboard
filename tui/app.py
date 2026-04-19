@@ -13,6 +13,7 @@ logger = get_logger("tui")
 class DashboardApp(App):
     CSS = """
     Screen {
+        layers: base overlay;
         background: #1a1a2e;
     }
     #grid {

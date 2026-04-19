@@ -53,6 +53,10 @@ class _EditPairModal(ModalScreen):
         if event.button.id == "btn-ok":
             new_pair = self.query_one("#new-pair", Input).value.strip().upper()
             new_scale = self.query_one("#new-scale", Select).value
+            parts = new_pair.split("/")
+            if len(parts) != 2 or not parts[0] or not parts[1]:
+                self.notify("Format invalide : utilisez BASE/QUOTE (ex: EUR/USD)", severity="error")
+                return
             self.dismiss((new_pair, new_scale))
 
 
@@ -141,18 +145,22 @@ class CurrencyWidget(Widget):
             return
         import json
         meta = json.loads(meta_path.read_text())
-        rate = meta.get("current", "—")
-        variation = meta.get("variation_pct", 0.0)
-        sign = "+" if variation >= 0 else ""
-        color = "green" if variation >= 0 else "red"
         label = self.query_one(f"#rate-{id(self)}", Label)
-        label.update(f"{rate:.4f}  [{color}]{sign}{variation:.2f}%[/]")
+        try:
+            rate = float(meta["current"])
+            variation = meta.get("variation_pct", 0.0)
+            sign = "+" if variation >= 0 else ""
+            color = "green" if variation >= 0 else "red"
+            label.update(f"{rate:.4f}  [{color}]{sign}{variation:.2f}%[/]")
+        except (KeyError, ValueError, TypeError):
+            label.update("— / —%")
+            return
 
     BINDINGS = [("m", "open_menu", "Menu")]
 
     def action_open_menu(self) -> None:
         from tui.widgets.context_menu import ContextMenu
-        self.app.mount(ContextMenu())
+        self.mount(ContextMenu())
 
     def on_context_menu_delete_widget(self) -> None:
         self.remove()
