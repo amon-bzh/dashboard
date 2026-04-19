@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import base64
+import sys
 from pathlib import Path
 
-from rich.segment import Segment, ControlType
+from rich.segment import Segment
 from rich.style import Style
 from textual.app import ComposeResult
 from textual.screen import ModalScreen
@@ -62,38 +63,47 @@ class _EditPairModal(ModalScreen):
 
 
 class ChartDisplay(Widget):
-    """Affiche un PNG via le protocole iTerm2 inline images."""
+    """Affiche un PNG via le protocole iTerm2 inline images.
+
+    Stratégie : render_line() est appelé par Textual à chaque rendu du widget
+    (focus, resize, interaction…). On y planifie via call_after_refresh l'écriture
+    de la séquence iTerm2 sur sys.__stdout__ (fd terminal réel), APRÈS que Textual
+    a flushed ses cellules vides. L'image survit ainsi à tout re-rendu.
+    """
 
     DEFAULT_CSS = """
     ChartDisplay {
         height: 1fr;
-        align: center middle;
-    }
-    #chart-placeholder {
-        color: $text-disabled;
-        text-style: italic;
     }
     """
 
     def __init__(self, image_path: Path, **kwargs) -> None:
         super().__init__(**kwargs)
         self.image_path = image_path
-        self._placeholder: Static | None = None
 
-    def compose(self) -> ComposeResult:
-        self._placeholder = Static("⏳ Chargement...", id="chart-placeholder")
-        yield self._placeholder
+    def render_line(self, y: int) -> Strip:
+        w = self.size.width
+        h = self.size.height
+        if y == 0:
+            if self.image_path.exists():
+                self.app.call_after_refresh(self._write_image)
+        if not self.image_path.exists() and h > 0 and y == h // 2:
+            msg = "⏳ Chargement..."
+            pad = max(0, (w - len(msg)) // 2)
+            return Strip([Segment(" " * pad + msg)])
+        return Strip.blank(w)
 
-    def on_mount(self) -> None:
-        self._render_image()
-
-    def _render_image(self) -> None:
+    def _write_image(self) -> None:
         if not self.image_path.exists():
-            if self._placeholder:
-                self._placeholder.update("⏳ Chargement...")
+            self.refresh()
             return
         w = self.size.width
         h = self.size.height
+        region = self.content_region
+        logger.debug(
+            f"ChartDisplay._write_image {self.image_path.name} "
+            f"size=({w},{h}) region=({region.x},{region.y})"
+        )
         if w == 0 or h == 0:
             return
         data = self.image_path.read_bytes()
@@ -103,18 +113,14 @@ class ChartDisplay(Widget):
             f"width={w}char;height={h}char;"
             f"preserveAspectRatio=1:{encoded}\x07"
         )
-        # Écrire la séquence iTerm2 directement après avoir positionné le curseur
-        region = self.content_region
         cursor_pos = f"\x1b[{region.y + 1};{region.x + 1}H"
-        import sys
-        sys.stdout.write(cursor_pos + seq)
-        sys.stdout.flush()
-        if self._placeholder:
-            self._placeholder.update("")
+        sys.__stdout__.write(cursor_pos + seq)
+        sys.__stdout__.flush()
+        logger.debug(f"ChartDisplay._write_image séquence écrite ({len(encoded)} octets b64)")
 
     def refresh_chart(self) -> None:
-        self._render_image()
-        self.refresh()
+        logger.debug(f"ChartDisplay.refresh_chart {self.image_path.name}")
+        self.refresh()  # → render_line → call_after_refresh → _write_image
 
 
 class CurrencyWidget(Widget):
@@ -154,8 +160,10 @@ class CurrencyWidget(Widget):
 
     def refresh_if_updated(self) -> None:
         if not self._png_path.exists():
+            logger.debug(f"refresh_if_updated: PNG absent {self._png_path}")
             return
         mtime = self._png_path.stat().st_mtime
+        logger.debug(f"refresh_if_updated: {self.pair} {self.scale} mtime={mtime:.3f} last={self._last_mtime:.3f}")
         if mtime > self._last_mtime:
             self._last_mtime = mtime
             self.query_one(ChartDisplay).refresh_chart()
