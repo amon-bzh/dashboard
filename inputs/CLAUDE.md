@@ -12,12 +12,14 @@ Dashboard TUI interactif de suivi de risque de change en temps différé. L'appl
 
 ## Reprise du travail
 
-Le code applicatif est à créer dans le répertoire **parent** (`../`) — ce dépôt `inputs/` contient uniquement les documents de conception. Pour exécuter le plan :
+Le code applicatif est dans le répertoire **parent** (`/Users/Antoine/Developer/dashboard/`), branche `feature/dashboard-tui`.
 
-```
-Utiliser le skill superpowers:subagent-driven-development
-en partant de la Task 1 du plan docs/superpowers/plans/2026-04-14-dashboard-tui.md
-```
+**Avancement :** Tasks 1–16 complètes (17 tests ✅). Implémentation terminée.
+
+**Précisions sur la structure du repo :**
+- Le repo git est à la racine `/Users/Antoine/Developer/dashboard/` (pas dans `inputs/`)
+- `requirements.txt` = dépendances runtime uniquement
+- `requirements-dev.txt` = runtime + pytest (utiliser pour les tests)
 
 ## Stack technique (décisions validées)
 
@@ -52,9 +54,9 @@ logs/logger.py  (RotatingFileHandler, DASHBOARD_LOG_LEVEL)
 ## Commandes de développement
 
 ```bash
-# Environnement virtuel
-python3.12 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+# Environnement virtuel (déjà créé — se placer dans /Users/Antoine/Developer/dashboard/)
+source .venv/bin/activate
+pip install -r requirements-dev.txt   # inclut pytest + pytest-asyncio
 
 # Lancer le TUI
 dashboard                          # via symlink /usr/local/bin/dashboard
@@ -72,6 +74,13 @@ launchctl load ~/Library/LaunchAgents/com.user.dashboard.plist
 launchctl start com.user.dashboard
 launchctl stop com.user.dashboard
 ```
+
+## Gotchas Textual (découverts en session)
+
+- **Routing messages** : monter un widget sur `self.app` coupe le bubbling — les handlers du widget parent ne reçoivent rien. Toujours monter sur `self` si les messages doivent remonter vers le parent.
+- **layer: overlay** : nécessite `layers: base overlay;` déclaré dans le CSS de `Screen`, sinon le widget overlay est invisible derrière la grille.
+- **pilot.type()** : absent dans Textual ≤ 0.82 — pour les tests, manipuler `Input.value` directement et appeler le handler explicitement.
+- **readlink -f** : non disponible sur macOS — utiliser `pwd -P` dans les scripts bash.
 
 ## Conventions importantes
 
