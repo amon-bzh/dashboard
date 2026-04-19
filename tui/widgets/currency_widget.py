@@ -6,7 +6,6 @@ from pathlib import Path
 from rich.segment import Segment
 from rich.style import Style
 from textual.app import ComposeResult
-from textual.containers import Vertical
 from textual.strip import Strip
 from textual.widget import Widget
 from textual.widgets import Label
