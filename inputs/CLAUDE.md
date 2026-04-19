@@ -14,12 +14,7 @@ Dashboard TUI interactif de suivi de risque de change en temps différé. L'appl
 
 Le code applicatif est dans le répertoire **parent** (`/Users/Antoine/Developer/dashboard/`), branche `feature/dashboard-tui`.
 
-**Avancement :** Tasks 1–7 complètes (13 tests ✅). Reprendre à la **Task 8**.
-
-```
-Utiliser le skill superpowers:subagent-driven-development
-en partant de la Task 8 du plan docs/superpowers/plans/2026-04-14-dashboard-tui.md
-```
+**Avancement :** Tasks 1–16 complètes (17 tests ✅). Implémentation terminée.
 
 **Précisions sur la structure du repo :**
 - Le repo git est à la racine `/Users/Antoine/Developer/dashboard/` (pas dans `inputs/`)
@@ -79,6 +74,13 @@ launchctl load ~/Library/LaunchAgents/com.user.dashboard.plist
 launchctl start com.user.dashboard
 launchctl stop com.user.dashboard
 ```
+
+## Gotchas Textual (découverts en session)
+
+- **Routing messages** : monter un widget sur `self.app` coupe le bubbling — les handlers du widget parent ne reçoivent rien. Toujours monter sur `self` si les messages doivent remonter vers le parent.
+- **layer: overlay** : nécessite `layers: base overlay;` déclaré dans le CSS de `Screen`, sinon le widget overlay est invisible derrière la grille.
+- **pilot.type()** : absent dans Textual ≤ 0.82 — pour les tests, manipuler `Input.value` directement et appeler le handler explicitement.
+- **readlink -f** : non disponible sur macOS — utiliser `pwd -P` dans les scripts bash.
 
 ## Conventions importantes
 
