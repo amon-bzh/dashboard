@@ -22,3 +22,5 @@ inputs/.claude/settings.local.json
 # Cache pytest
 .pytest_cache/
 .coverage
+.claude/
+.remember/
