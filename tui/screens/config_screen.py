@@ -14,6 +14,7 @@ class ConfigScreen(Widget):
     DEFAULT_CSS = """
     ConfigScreen {
         padding: 1 2;
+        height: auto;
     }
     ConfigScreen Label {
         margin-top: 1;
@@ -25,6 +26,14 @@ class ConfigScreen(Widget):
     }
     #btn-apply {
         margin-top: 2;
+    }
+    #btn-purge {
+        margin-top: 1;
+        border: solid red;
+    }
+    #purge-status {
+        margin-top: 1;
+        color: #00b4d8;
     }
     #future-alerts {
         margin-top: 2;
@@ -49,12 +58,17 @@ class ConfigScreen(Widget):
             type="integer",
         )
         yield Button("Appliquer", id="btn-apply", variant="primary")
+        yield Button("🗑 Purger la base de données", id="btn-purge", variant="error")
+        yield Static("", id="purge-status")
         yield Static("⏳ Seuils d'alerte — Prochainement", id="future-alerts")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id != "btn-apply":
-            return
+        if event.button.id == "btn-apply":
+            self._apply_config()
+        elif event.button.id == "btn-purge":
+            self._purge_cache()
 
+    def _apply_config(self) -> None:
         config = load_config()
         config.base_currency = self.query_one("#input-base-currency", Input).value.strip().upper()
         try:
@@ -76,3 +90,15 @@ class ConfigScreen(Widget):
         grid = self.app.query_one("#grid", Grid)
         grid.styles.grid_size_columns = config.grid_columns
         grid.styles.grid_columns = " ".join(["1fr"] * config.grid_columns)
+
+    def _purge_cache(self) -> None:
+        from shared.paths import CACHE_DIR
+        status = self.query_one("#purge-status", Static)
+        deleted = 0
+        for f in CACHE_DIR.glob("*"):
+            if f.is_file():
+                f.unlink()
+                deleted += 1
+        logger.info(f"Cache purgé : {deleted} fichier(s) supprimé(s)")
+        status.update(f"✓ {deleted} fichier(s) supprimé(s) — base purgée")
+        self.set_timer(4, lambda: status.update(""))

@@ -3,16 +3,17 @@ from __future__ import annotations
 import base64
 from pathlib import Path
 
-from rich.segment import Segment
+from rich.segment import Segment, ControlType
 from rich.style import Style
 from textual.app import ComposeResult
 from textual.screen import ModalScreen
 from textual.strip import Strip
 from textual.widget import Widget
-from textual.widgets import Button, Input, Label, Select
+from textual.widgets import Button, Input, Label, Select, Static
 
 from logs.logger import get_logger
 from shared.paths import png_path
+from tui.widgets.context_menu import FOCUS_COLOR
 
 logger = get_logger("tui")
 
@@ -66,53 +67,77 @@ class ChartDisplay(Widget):
     DEFAULT_CSS = """
     ChartDisplay {
         height: 1fr;
+        align: center middle;
+    }
+    #chart-placeholder {
+        color: $text-disabled;
+        text-style: italic;
     }
     """
 
     def __init__(self, image_path: Path, **kwargs) -> None:
         super().__init__(**kwargs)
         self.image_path = image_path
+        self._placeholder: Static | None = None
 
-    def render_line(self, y: int) -> Strip:
-        if y == 0 and self.image_path.exists():
-            data = self.image_path.read_bytes()
-            encoded = base64.b64encode(data).decode()
-            w = self.size.width
-            h = self.size.height
-            seq = (
-                f"\x1b]1337;File=inline=1;"
-                f"width={w}char;height={h}char;"
-                f"preserveAspectRatio=1:{encoded}\x07"
-            )
-            return Strip([Segment(seq, Style())])
+    def compose(self) -> ComposeResult:
+        self._placeholder = Static("⏳ Chargement...", id="chart-placeholder")
+        yield self._placeholder
 
-        if not self.image_path.exists() and y == self.size.height // 2:
-            label = "⏳ Chargement..."
-            pad = (self.size.width - len(label)) // 2
-            return Strip([Segment(" " * pad + label, Style(color="yellow"))])
+    def on_mount(self) -> None:
+        self._render_image()
 
-        return Strip([Segment(" " * self.size.width, Style())])
+    def _render_image(self) -> None:
+        if not self.image_path.exists():
+            if self._placeholder:
+                self._placeholder.update("⏳ Chargement...")
+            return
+        w = self.size.width
+        h = self.size.height
+        if w == 0 or h == 0:
+            return
+        data = self.image_path.read_bytes()
+        encoded = base64.b64encode(data).decode()
+        seq = (
+            f"\x1b]1337;File=inline=1;"
+            f"width={w}char;height={h}char;"
+            f"preserveAspectRatio=1:{encoded}\x07"
+        )
+        # Écrire la séquence iTerm2 directement après avoir positionné le curseur
+        region = self.content_region
+        cursor_pos = f"\x1b[{region.y + 1};{region.x + 1}H"
+        import sys
+        sys.stdout.write(cursor_pos + seq)
+        sys.stdout.flush()
+        if self._placeholder:
+            self._placeholder.update("")
 
     def refresh_chart(self) -> None:
+        self._render_image()
         self.refresh()
 
 
 class CurrencyWidget(Widget):
-    DEFAULT_CSS = """
-    CurrencyWidget {
+    can_focus = True
+
+    DEFAULT_CSS = f"""
+    CurrencyWidget {{
         border: solid $border;
         height: 22;
         padding: 0;
-    }
-    .header {
+    }}
+    CurrencyWidget:focus {{
+        border: solid {FOCUS_COLOR};
+    }}
+    .header {{
         height: 1;
         color: $text-muted;
         padding: 0 1;
-    }
-    .rate-line {
+    }}
+    .rate-line {{
         height: 1;
         padding: 0 1;
-    }
+    }}
     """
 
     def __init__(self, pair: str, scale: str, **kwargs) -> None:
@@ -156,11 +181,33 @@ class CurrencyWidget(Widget):
             label.update("— / —%")
             return
 
-    BINDINGS = [("m", "open_menu", "Menu")]
+    BINDINGS = [
+        ("m", "open_menu", "Menu"),
+        ("p", "cycle_period", "Période"),
+    ]
 
     def action_open_menu(self) -> None:
         from tui.widgets.context_menu import ContextMenu
+        existing = self.query(ContextMenu)
+        if existing:
+            existing.first().remove()
+            return
         self.mount(ContextMenu())
+
+    _PERIODS = ["1M", "3M", "6M", "1A", "2A", "5A"]
+
+    def action_cycle_period(self) -> None:
+        try:
+            idx = self._PERIODS.index(self.scale)
+        except ValueError:
+            idx = -1
+        self.scale = self._PERIODS[(idx + 1) % len(self._PERIODS)]
+        self._png_path = png_path(self.pair, self.scale)
+        self._last_mtime = 0.0
+        self.query_one(".header", Label).update(f"{self.pair} · {self.scale}")
+        self._update_config()
+        from shared.config import notify_daemon
+        notify_daemon()
 
     def on_context_menu_delete_widget(self) -> None:
         self.remove()
