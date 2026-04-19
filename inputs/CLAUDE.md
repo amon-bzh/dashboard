@@ -87,6 +87,8 @@ launchctl kill SIGTERM gui/$(id -u)/com.user.dashboard   # stop
 - **render_line + séquence iTerm2 :** injecter la séquence OSC dans un `Segment` Rich cause des artefacts ANSI (Rich mesure la longueur base64 et tronque). Solution validée : écrire via `sys.stdout.write(cursor_pos + seq)` après avoir positionné le curseur avec `region = self.content_region` → `\x1b[{region.y+1};{region.x+1}H`.
 - **Widget focusable :** `can_focus = True` sur la classe + sélecteur CSS `:focus` pour styler la bordure active. Tab/Shift+Tab sont gérés automatiquement par Textual.
 - **Anti-doublon ContextMenu :** avant `self.mount(ContextMenu())`, faire `self.query(ContextMenu)` et retourner si non vide ; ajouter `on_key` avec `event.key == "escape"` dans le menu pour le fermer.
+- **API Frankfurter :** URL migrée vers `https://api.frankfurter.dev/v1` (l'ancienne `api.frankfurter.app` retourne 301 non suivi → échec silencieux).
+- **SIGHUP daemon :** recharge la config JSON uniquement, pas le code Python — pour un changement de code, redémarrer via `launchctl bootout` + `bootstrap`.
 
 ## Conventions importantes
 
