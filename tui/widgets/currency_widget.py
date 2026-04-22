@@ -7,6 +7,7 @@ from pathlib import Path
 from rich.segment import Segment
 from rich.style import Style
 from textual.app import ComposeResult
+from textual.geometry import Region
 from textual.screen import ModalScreen
 from textual.strip import Strip
 from textual.widget import Widget
@@ -65,10 +66,12 @@ class _EditPairModal(ModalScreen):
 class ChartDisplay(Widget):
     """Affiche un PNG via le protocole iTerm2 inline images.
 
-    Stratégie : render_line() est appelé par Textual à chaque rendu du widget
-    (focus, resize, interaction…). On y planifie via call_after_refresh l'écriture
-    de la séquence iTerm2 sur sys.__stdout__ (fd terminal réel), APRÈS que Textual
-    a flushed ses cellules vides. L'image survit ainsi à tout re-rendu.
+    Stratégie : render_lines() est le point d'accroche correct — il est appelé
+    par le compositor Textual chaque fois qu'il va envoyer les strips au terminal,
+    y compris quand il utilise le cache de StylesCache (ce que render_line() ne
+    voit pas). On y planifie via call_after_refresh l'écriture de la séquence
+    iTerm2 sur sys.__stdout__ (fd terminal réel), APRÈS que Textual a flushed ses
+    cellules vides.
     """
 
     DEFAULT_CSS = """
@@ -80,13 +83,19 @@ class ChartDisplay(Widget):
     def __init__(self, image_path: Path, **kwargs) -> None:
         super().__init__(**kwargs)
         self.image_path = image_path
+        self._write_pending = False
+
+    def render_lines(self, crop: Region) -> list[Strip]:
+        strips = super().render_lines(crop)
+        w, h = self.size.width, self.size.height
+        if self.image_path.exists() and w > 0 and h > 0 and not self._write_pending:
+            self._write_pending = True
+            self.app.call_after_refresh(self._write_image)
+        return strips
 
     def render_line(self, y: int) -> Strip:
         w = self.size.width
         h = self.size.height
-        if y == 0:
-            if self.image_path.exists():
-                self.app.call_after_refresh(self._write_image)
         if not self.image_path.exists() and h > 0 and y == h // 2:
             msg = "⏳ Chargement..."
             pad = max(0, (w - len(msg)) // 2)
@@ -94,6 +103,7 @@ class ChartDisplay(Widget):
         return Strip.blank(w)
 
     def _write_image(self) -> None:
+        self._write_pending = False
         if not self.image_path.exists():
             self.refresh()
             return
@@ -101,7 +111,7 @@ class ChartDisplay(Widget):
         h = self.size.height
         region = self.content_region
         logger.debug(
-            f"ChartDisplay._write_image {self.image_path.name} "
+            f"_write_image {self.image_path.name} "
             f"size=({w},{h}) region=({region.x},{region.y})"
         )
         if w == 0 or h == 0:
@@ -116,11 +126,11 @@ class ChartDisplay(Widget):
         cursor_pos = f"\x1b[{region.y + 1};{region.x + 1}H"
         sys.__stdout__.write(cursor_pos + seq)
         sys.__stdout__.flush()
-        logger.debug(f"ChartDisplay._write_image séquence écrite ({len(encoded)} octets b64)")
+        logger.debug(f"_write_image séquence écrite ({len(encoded)} b64)")
 
     def refresh_chart(self) -> None:
         logger.debug(f"ChartDisplay.refresh_chart {self.image_path.name}")
-        self.refresh()  # → render_line → call_after_refresh → _write_image
+        self.refresh()  # → render_lines → call_after_refresh → _write_image
 
 
 class CurrencyWidget(Widget):
@@ -134,6 +144,10 @@ class CurrencyWidget(Widget):
     }}
     CurrencyWidget:focus {{
         border: solid {FOCUS_COLOR};
+    }}
+    CurrencyWidget:focus .header {{
+        color: {FOCUS_COLOR};
+        text-style: bold;
     }}
     .header {{
         height: 1;
