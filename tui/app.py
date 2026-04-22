@@ -17,6 +17,11 @@ class DashboardApp(App):
         ("q", "quit", "Quitter"),
     ]
 
+    def __init__(self, widget_height: int = 22, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self._widget_height = widget_height
+        logger.debug(f"DashboardApp widget_height={widget_height}")
+
     CSS = """
     Screen {
         layers: base overlay;
@@ -68,7 +73,7 @@ class DashboardApp(App):
         grid.styles.grid_size_columns = config.grid_columns
         grid.styles.grid_columns = " ".join(["1fr"] * config.grid_columns)
         for w in config.widgets:
-            grid.mount(CurrencyWidget(w.pair, w.scale))
+            grid.mount(CurrencyWidget(w.pair, w.scale, widget_height=self._widget_height))
         logger.debug(f"{len(config.widgets)} widgets chargés")
 
     async def _poll_cache(self) -> None:
@@ -91,7 +96,7 @@ class DashboardApp(App):
             if not result:
                 return
             new_pair, new_scale = result
-            widget = CurrencyWidget(new_pair, new_scale)
+            widget = CurrencyWidget(new_pair, new_scale, widget_height=self._widget_height)
             await self.query_one("#grid", Grid).mount(widget)
             from shared.config import load_config, save_config, WidgetConfig
             config = load_config()

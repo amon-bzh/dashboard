@@ -139,7 +139,7 @@ class CurrencyWidget(Widget):
     DEFAULT_CSS = f"""
     CurrencyWidget {{
         border: solid $border;
-        height: 22;
+        height: auto;
         padding: 0;
     }}
     CurrencyWidget:focus {{
@@ -160,12 +160,14 @@ class CurrencyWidget(Widget):
     }}
     """
 
-    def __init__(self, pair: str, scale: str, **kwargs) -> None:
+    def __init__(self, pair: str, scale: str, widget_height: int = 22, **kwargs) -> None:
         super().__init__(**kwargs)
         self.pair = pair
         self.scale = scale
         self._png_path = png_path(pair, scale)
         self._last_mtime: float = 0.0
+        self.styles.height = widget_height
+        logger.debug(f"CurrencyWidget {pair}/{scale} height={widget_height}")
 
     def compose(self) -> ComposeResult:
         yield Label(f"{self.pair} · {self.scale}", classes="header")
