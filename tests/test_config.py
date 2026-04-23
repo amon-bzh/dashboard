@@ -9,6 +9,10 @@ def test_default_config_has_three_widgets():
     assert len(cfg.widgets) == 3
     assert cfg.widgets[0].pair == "EUR/USD"
 
+def test_default_cell_ratio():
+    cfg = DashboardConfig()
+    assert cfg.terminal_cell_ratio == 0.477
+
 def test_save_and_load_roundtrip(tmp_path, monkeypatch):
     import shared.paths as p
     monkeypatch.setattr(p, "CONFIG_DIR", tmp_path)
@@ -20,6 +24,7 @@ def test_save_and_load_roundtrip(tmp_path, monkeypatch):
         base_currency="USD",
         refresh_interval_minutes=30,
         grid_columns=3,
+        terminal_cell_ratio=0.6,
         widgets=[WidgetConfig("GBP/JPY", "6M")],
     )
     save_config(cfg)
@@ -27,6 +32,7 @@ def test_save_and_load_roundtrip(tmp_path, monkeypatch):
     assert loaded.base_currency == "USD"
     assert loaded.refresh_interval_minutes == 30
     assert loaded.grid_columns == 3
+    assert loaded.terminal_cell_ratio == 0.6
     assert loaded.widgets[0].pair == "GBP/JPY"
     assert loaded.widgets[0].scale == "6M"
 

@@ -5,7 +5,7 @@ Dashboard interactif de suivi de risque de change en temps différé, affiché d
 ## Fonctionnalités
 
 - Affichage de paires de devises (EUR/USD, EUR/GBP, EUR/JPY…) sous forme de widgets graphiques
-- Historique sur 1M, 3M, 6M, 1A, 2A ou 5A via [Frankfurter.app](https://frankfurter.app) (données BCE, sans clé API)
+- Historique sur 1M, 3M, 6M, 1A, 2A ou 5A via [Frankfurter API](https://api.frankfurter.dev/v1/) (données BCE, sans clé API)
 - Variation colorée (vert/rouge) et taux courant affiché dans chaque widget
 - Rafraîchissement automatique configurable (daemon Launchd)
 - Ajout/modification/suppression de paires en live via menu contextuel (touche `m`)
@@ -17,12 +17,12 @@ Deux processus indépendants communiquant via fichiers :
 
 ```
 daemon (Launchd)                     TUI (Textual)
-├── fetche Frankfurter.app           ├── affiche les PNG via protocole iTerm2
+├── fetche Frankfurter API           ├── affiche les PNG via protocole iTerm2
 └── génère PNG + JSON metadata  ←→  └── envoie SIGHUP au daemon si config change
 
 ~/.config/dashboard/
 ├── config.json        — configuration partagée
-├── cache/*.png        — graphiques générés
+├── cache/*.png        — graphiques générés (800×300 px, ratio 8:3)
 ├── cache/*.json       — métadonnées (taux courant, variation %)
 └── daemon.pid         — PID pour SIGHUP
 ```
@@ -54,26 +54,16 @@ ln -sf "$(pwd)/bin/dashboard" /usr/local/bin/dashboard
 ## Utilisation
 
 ```bash
-dashboard                        # lancer le TUI
+dashboard                          # lancer le TUI
 DASHBOARD_LOG_LEVEL=DEBUG dashboard   # mode verbeux
 ```
 
 **Navigation :**
-- `Tab` / clic — basculer entre les onglets Dashboard et Configuration
-- `m` — ouvrir le menu contextuel sur le widget focalisé (modifier paire, changer échelle, supprimer)
+- `Tab` / `Shift+Tab` — naviguer entre les widgets
+- `m` — ouvrir le menu contextuel (modifier paire, changer échelle, supprimer)
+- `p` — cycler les périodes sur le widget focalisé
 - `[+] Ajouter une paire` — bouton en bas de la grille
-
-## Développement
-
-```bash
-source .venv/bin/activate
-pip install -r requirements-dev.txt
-
-pytest          # lancer les 17 tests
-pytest -v       # mode verbeux
-
-python -m daemon   # lancer le daemon manuellement (hors Launchd)
-```
+- `q` — quitter
 
 ## Configuration
 
@@ -84,12 +74,31 @@ Editée via l'onglet Configuration du TUI ou directement dans `~/.config/dashboa
   "base_currency": "EUR",
   "refresh_interval_minutes": 60,
   "grid_columns": 2,
+  "terminal_cell_ratio": 0.477,
   "widgets": [
-    {"pair": "EUR/USD", "scale": "1M"},
-    {"pair": "EUR/GBP", "scale": "1M"},
-    {"pair": "EUR/JPY", "scale": "1M"}
+    {"pair": "EUR/USD", "scale": "1M"}
   ]
 }
+```
+
+**`terminal_cell_ratio`** — ratio `cell_w / cell_h` de la police terminal (appliqué au prochain démarrage). La valeur `0.477` correspond à **MesloLGS NF Regular 13pt** ; ajuster si les graphiques présentent des bandes noires latérales. Mesures de référence :
+
+| Police | Taille | Ratio |
+|--------|--------|-------|
+| MesloLGS NF Regular | 13pt | 0.477 |
+| Monaco | 12pt | 0.500 |
+| Menlo Regular | 13pt | ~0.470 |
+
+## Développement
+
+```bash
+source .venv/bin/activate
+pip install -r requirements-dev.txt
+
+pytest          # lancer les tests
+pytest -v       # mode verbeux
+
+python -m daemon   # lancer le daemon manuellement (hors Launchd)
 ```
 
 ## Logs

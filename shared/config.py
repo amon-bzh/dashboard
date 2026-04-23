@@ -20,6 +20,7 @@ class DashboardConfig:
     base_currency: str = "EUR"
     refresh_interval_minutes: int = 60
     grid_columns: int = 2
+    terminal_cell_ratio: float = 0.477
     widgets: List[WidgetConfig] = field(
         default_factory=lambda: [
             WidgetConfig("EUR/USD", "1M"),
