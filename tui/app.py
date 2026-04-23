@@ -17,10 +17,11 @@ class DashboardApp(App):
         ("q", "quit", "Quitter"),
     ]
 
-    def __init__(self, widget_height: int = 22, **kwargs) -> None:
+    def __init__(self, widget_height: int = 22, cell_ratio: float = 0.477, **kwargs) -> None:
         super().__init__(**kwargs)
         self._widget_height = widget_height
-        logger.debug(f"DashboardApp widget_height={widget_height}")
+        self.cell_ratio = cell_ratio
+        logger.debug(f"DashboardApp widget_height={widget_height} cell_ratio={cell_ratio:.4f}")
 
     CSS = """
     Screen {

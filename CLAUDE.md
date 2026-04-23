@@ -38,7 +38,9 @@ tail -f ~/.config/dashboard/dashboard.log
 
 **Rendu iTerm2 dans Textual** — `ChartDisplay` écrit la séquence iTerm2 hors du cycle Textual via `sys.__stdout__`. L'accroche correcte est `render_lines()` (appelé même si le cache Textual est actif), pas `render_line()`. Voir [Textual rendering](https://textual.textualize.io/guide/widgets/#render-methods).
 
-**`terminal_cell_ratio`** — ratio `cell_w / cell_h` de la police terminal, stocké dans `config.json`. Détermine la hauteur du widget pour que le graphique 8:3 remplisse la largeur sans letterboxing. Valeur mesurée pour MesloLGS NF Regular 13pt : `0.477`. À ajuster si la police change.
+**`terminal_cell_ratio`** — ratio `cell_w / cell_h` de la police terminal, stocké dans `config.json`. Détermine `display_h` dans `_write_image` pour que le graphique 8:3 remplisse la largeur sans letterboxing. Valeur par défaut `0.477` (MesloLGS NF Regular 13pt) probablement incorrecte — voir `docs/letterboxing.md`.
+
+**Letterboxing iTerm2** — chantier ouvert. Synthèse des pistes explorées (CSI 16t, `display_h` dynamique, `height: auto` Grid, `_compute_widget_height` adaptatif) dans `docs/letterboxing.md`.
 
 **Daemon SIGHUP** — le TUI envoie `SIGHUP` au daemon (`shared/config.notify_daemon()`) après toute modification de config pour déclencher un rechargement immédiat.
 

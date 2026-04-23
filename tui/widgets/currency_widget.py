@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import math
 import sys
 from pathlib import Path
 
@@ -116,17 +117,34 @@ class ChartDisplay(Widget):
         )
         if w == 0 or h == 0:
             return
+        ratio = getattr(self.app, "cell_ratio", 0.477)
+        display_h_exact = w * ratio / (8 / 3)
+        display_h = max(1, min(h, math.ceil(display_h_exact)))
+        logger.debug(
+            f"[cadre] {self.image_path.name} : "
+            f"ChartDisplay={w}×{h}  ratio={ratio:.4f}  "
+            f"display_h_exact={display_h_exact:.2f}  display_h={display_h}"
+        )
         data = self.image_path.read_bytes()
+
+        import struct
+        try:
+            png_w = struct.unpack(">I", data[16:20])[0]
+            png_h = struct.unpack(">I", data[20:24])[0]
+            logger.debug(f"[image] {self.image_path.name} : PNG {png_w}×{png_h} px  ratio={png_w/png_h:.4f}")
+        except Exception:
+            pass
+
         encoded = base64.b64encode(data).decode()
         seq = (
             f"\x1b]1337;File=inline=1;"
-            f"width={w}char;height={h}char;"
+            f"width={w}char;height={display_h}char;"
             f"preserveAspectRatio=1:{encoded}\x07"
         )
         cursor_pos = f"\x1b[{region.y + 1};{region.x + 1}H"
         sys.__stdout__.write(cursor_pos + seq)
         sys.__stdout__.flush()
-        logger.debug(f"_write_image séquence écrite ({len(encoded)} b64)")
+        logger.debug(f"[image] séquence écrite : width={w}char height={display_h}char ({len(encoded)} b64)")
 
     def refresh_chart(self) -> None:
         logger.debug(f"ChartDisplay.refresh_chart {self.image_path.name}")
