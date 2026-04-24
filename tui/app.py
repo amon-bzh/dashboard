@@ -61,6 +61,7 @@ class DashboardApp(App):
     def on_mount(self) -> None:
         self._load_widgets()
         self.set_interval(5, self._poll_cache)
+        self.call_after_refresh(self._poll_cache)
         logger.info("TUI démarré")
 
     def _load_widgets(self) -> None:
