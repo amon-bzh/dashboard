@@ -23,7 +23,6 @@ def test_save_and_load_roundtrip(tmp_path, monkeypatch):
     cfg = DashboardConfig(
         base_currency="USD",
         refresh_interval_minutes=30,
-        grid_columns=3,
         terminal_cell_ratio=0.6,
         widgets=[WidgetConfig("GBP/JPY", "6M")],
     )
@@ -31,7 +30,6 @@ def test_save_and_load_roundtrip(tmp_path, monkeypatch):
     loaded = load_config()
     assert loaded.base_currency == "USD"
     assert loaded.refresh_interval_minutes == 30
-    assert loaded.grid_columns == 3
     assert loaded.terminal_cell_ratio == 0.6
     assert loaded.widgets[0].pair == "GBP/JPY"
     assert loaded.widgets[0].scale == "6M"

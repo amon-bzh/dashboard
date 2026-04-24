@@ -60,20 +60,12 @@ def _query_cell_ratio(logger) -> float | None:
     return None
 
 
-_TEXTUAL_OVERHEAD = 6  # tabs(3) + footer(1) + bottom-bar(2)
-_GRID_ROW_GUTTER = 1
-
-
 def _compute_widget_height(cell_ratio: float, logger) -> int:
-    from shared.config import load_config
-
-    config = load_config()
-    nb_cols = max(1, config.grid_columns)
+    nb_cols = 2  # WidgetGallery utilise 2 colonnes fixes
     term_size = os.get_terminal_size()
     term_cols = term_size.columns
-    term_rows = term_size.lines
 
-    logger.debug(f"[calcul] écran terminal : {term_cols} cols × {term_rows} lignes")
+    logger.debug(f"[calcul] largeur terminal : {term_cols} cols")
     logger.debug(f"[calcul] grille : {nb_cols} colonnes")
 
     # Largeur réelle du ChartDisplay (gutter entre colonnes + 2 bordures du widget)
@@ -89,18 +81,8 @@ def _compute_widget_height(cell_ratio: float, logger) -> int:
     h_chart_from_ratio = inner_width * cell_ratio / image_ratio
     logger.debug(f"[calcul] h_chart depuis ratio : {h_chart_from_ratio:.3f}")
 
-    # Hauteur réellement disponible par rangée dans le Grid
-    nb_widgets = len(config.widgets)
-    nb_rows = max(1, math.ceil(nb_widgets / nb_cols))
-    available = term_rows - _TEXTUAL_OVERHEAD
-    h_per_row = (available - (nb_rows - 1) * _GRID_ROW_GUTTER) / nb_rows
-    h_chart_from_screen = h_per_row - 4  # -2 bordures -1 header -1 rate-line
-    logger.debug(f"[calcul] nb_rows={nb_rows}  available={available}  h_per_row={h_per_row:.1f}")
-    logger.debug(f"[calcul] h_chart depuis écran : {h_chart_from_screen:.1f}")
-
-    # Prendre le plus petit des deux pour remplir l'écran sans dépasser
-    h_chart = max(4, math.floor(min(h_chart_from_ratio, h_chart_from_screen)))
-    widget_height = h_chart + 4
+    h_chart = max(4, math.ceil(h_chart_from_ratio))
+    widget_height = h_chart + 5  # +1 marge pour absorber le décalage de rendu iTerm2
     logger.debug(f"[calcul] h_chart final : {h_chart}  →  widget_height = {widget_height}")
     return widget_height
 

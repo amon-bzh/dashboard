@@ -55,12 +55,6 @@ class ConfigScreen(Widget):
             id="input-refresh",
             type="integer",
         )
-        yield Label("Nombre de colonnes")
-        yield Input(
-            value=str(config.grid_columns),
-            id="input-columns",
-            type="integer",
-        )
         yield Label("Ratio cellule terminal (cell_w / cell_h) — ex: 0.5 pour police 8×16")
         yield Input(
             value=str(config.terminal_cell_ratio),
@@ -87,9 +81,6 @@ class ConfigScreen(Widget):
         try:
             config.refresh_interval_minutes = int(
                 self.query_one("#input-refresh", Input).value
-            )
-            config.grid_columns = int(
-                self.query_one("#input-columns", Input).value
             )
             config.terminal_cell_ratio = float(
                 self.query_one("#input-cell-ratio", Input).value
