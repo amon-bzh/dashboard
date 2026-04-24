@@ -9,6 +9,7 @@ from rich.segment import Segment
 from rich.style import Style
 from textual.app import ComposeResult
 from textual.geometry import Region
+from textual.message import Message
 from textual.screen import ModalScreen
 from textual.strip import Strip
 from textual.widget import Widget
@@ -251,8 +252,14 @@ class CurrencyWidget(Widget):
         from shared.config import notify_daemon
         notify_daemon()
 
+    class RequestDelete(Message):
+        """Demande à la galerie parente de supprimer ce widget et de nettoyer la rangée."""
+        def __init__(self, widget: "CurrencyWidget") -> None:
+            super().__init__()
+            self.widget = widget
+
     def on_context_menu_delete_widget(self) -> None:
-        self.remove()
+        self.post_message(CurrencyWidget.RequestDelete(self))
 
     def on_context_menu_edit_pair(self) -> None:
         async def _handle_result(result) -> None:

@@ -62,3 +62,13 @@ class WidgetGallery(VerticalScroll):
                 return
         row = GalleryRow(widget_height=self._widget_height, widgets=[widget])
         await self.mount(row)
+
+    def on_currency_widget_request_delete(self, event) -> None:
+        """Supprime le widget et retire la rangée parente si elle devient vide."""
+        widget = event.widget
+        row = widget.parent
+        from tui.widgets.currency_widget import CurrencyWidget
+        is_last_in_row = isinstance(row, GalleryRow) and len(list(row.query(CurrencyWidget))) == 1
+        widget.remove()
+        if is_last_in_row:
+            row.remove()
