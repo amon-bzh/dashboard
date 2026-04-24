@@ -18,6 +18,7 @@ shared/paths.py          — chemins (~/.config/dashboard/)
 daemon/fetcher.py        — appels HTTP Frankfurter (async)
 daemon/renderer.py       — génère PNG + JSON métadonnées
 tui/app.py               — DashboardApp (Textual App)
+tui/widgets/gallery.py          — WidgetGallery + GalleryRow (layout 2 colonnes)
 tui/widgets/currency_widget.py  — CurrencyWidget + ChartDisplay
 tui/screens/config_screen.py    — onglet Configuration
 logs/logger.py           — logging niveau DEBUG/INFO/WARNING
@@ -27,7 +28,7 @@ logs/logger.py           — logging niveau DEBUG/INFO/WARNING
 
 ```bash
 source .venv/bin/activate
-pytest -v                         # 18 tests
+pytest -v                         # 22 tests
 python -m main                    # lancer le TUI
 python -m daemon                  # daemon manuel
 DASHBOARD_LOG_LEVEL=DEBUG python -m main
@@ -48,9 +49,17 @@ tail -f ~/.config/dashboard/dashboard.log
 
 **Logs** — niveau contrôlé par `DASHBOARD_LOG_LEVEL` (env var). Fichiers dans `~/.config/dashboard/`.
 
+**Layout galerie** — `WidgetGallery(VerticalScroll)` contient des `GalleryRow(Horizontal)` de 2 widgets. `load_widgets(list)` pour le batch initial (sync), `add_currency_widget(widget)` pour l'ajout dynamique (async). 2 colonnes fixes — non configurable. Pour initialiser un `GalleryRow` avec un widget, passer `widgets=[widget]` au constructeur (utilise `compose()`) plutôt que `await row.mount(widget)` après `await self.mount(row)` — évite le problème de mount séquentiel async.
+
+**Suppressions Textual** — vérifier `is_last_in_row` AVANT d'appeler `widget.remove()` : `remove()` est schedulé (non immédiat), donc le DOM n'est pas encore mis à jour au moment du check qui suit.
+
+**Config rétrocompatibilité** — quand un champ est retiré de `DashboardConfig`, ajouter `data.pop("ancien_champ", None)` dans `load_config()` avant la construction du dataclass : le `~/.config/dashboard/config.json` de production peut encore contenir l'ancienne clé.
+
+**CSS Textual** — le combinateur enfant `>` fonctionne dans les sélecteurs Textual (ex : `GalleryRow > CurrencyWidget { width: 1fr; }`).
+
 ## Tests
 
-18 tests dans `tests/`. Pas de mocks réseau : `test_fetcher.py` fait de vrais appels HTTP. `test_tui.py` utilise `App.run_test()` (Textual).
+22 tests dans `tests/`. Pas de mocks réseau : `test_fetcher.py` fait de vrais appels HTTP. `test_tui.py` et `test_gallery.py` utilisent `App.run_test()` (Textual).
 
 ## Références externes
 
