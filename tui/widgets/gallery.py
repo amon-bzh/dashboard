@@ -50,3 +50,15 @@ class WidgetGallery(VerticalScroll):
         """Retourne tous les CurrencyWidget dans l'ordre DOM (ordre d'affichage)."""
         from tui.widgets.currency_widget import CurrencyWidget
         return list(self.query(CurrencyWidget))
+
+    async def add_currency_widget(self, widget) -> None:
+        """Ajoute un widget dans la dernière rangée si dispo, sinon crée une nouvelle rangée."""
+        rows = list(self.query(GalleryRow))
+        if rows:
+            last_row = rows[-1]
+            from tui.widgets.currency_widget import CurrencyWidget
+            if len(list(last_row.query(CurrencyWidget))) < 2:
+                await last_row.mount(widget)
+                return
+        row = GalleryRow(widget_height=self._widget_height, widgets=[widget])
+        await self.mount(row)
