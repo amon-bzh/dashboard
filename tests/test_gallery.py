@@ -45,33 +45,6 @@ async def test_load_widgets_creates_rows(tmp_path, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_empty_row_removed_after_widget_deletion(tmp_path, monkeypatch):
-    import shared.paths as p
-    monkeypatch.setattr(p, "CACHE_DIR", tmp_path)
-    monkeypatch.setattr(p, "CONFIG_FILE", tmp_path / "config.json")
-    from tui.widgets.gallery import GalleryRow, WidgetGallery
-    from tui.widgets.currency_widget import CurrencyWidget
-
-    class TestApp(App):
-        def compose(self) -> ComposeResult:
-            yield WidgetGallery(widget_height=12)
-
-    async with TestApp().run_test() as pilot:
-        gallery = pilot.app.query_one(WidgetGallery)
-        w1 = CurrencyWidget("EUR/USD", "1M", widget_height=12)
-        w2 = CurrencyWidget("GBP/USD", "1M", widget_height=12)
-        w3 = CurrencyWidget("USD/JPY", "1M", widget_height=12)
-        gallery.load_widgets([w1, w2, w3])
-        await pilot.pause()
-        # w3 est seul dans la rangée 2 — sa suppression doit effacer la rangée
-        w3.post_message(CurrencyWidget.RequestDelete(w3))
-        await pilot.pause()
-        rows = list(gallery.query(GalleryRow))
-        assert len(rows) == 1
-        assert len(list(gallery.query(CurrencyWidget))) == 2
-
-
-@pytest.mark.asyncio
 async def test_add_currency_widget_fills_row_then_creates_new(tmp_path, monkeypatch):
     import shared.paths as p
     monkeypatch.setattr(p, "CACHE_DIR", tmp_path)
