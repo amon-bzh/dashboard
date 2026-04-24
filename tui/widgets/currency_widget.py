@@ -278,11 +278,12 @@ class CurrencyWidget(Widget):
 
     def _update_config(self) -> None:
         from shared.config import load_config, save_config, WidgetConfig
-        from tui.widgets.currency_widget import CurrencyWidget
+        from tui.widgets.gallery import WidgetGallery
         config = load_config()
+        gallery = self.app.query_one(WidgetGallery)
         config.widgets = [
             WidgetConfig(w.pair, w.scale)
-            for w in self.app.query(CurrencyWidget)
+            for w in gallery.all_currency_widgets()
         ]
         save_config(config)
 

@@ -102,11 +102,6 @@ class ConfigScreen(Widget):
         notify_daemon()
         logger.info("Configuration sauvegardée et daemon notifié")
 
-        from textual.containers import Grid
-        grid = self.app.query_one("#grid", Grid)
-        grid.styles.grid_size_columns = config.grid_columns
-        grid.styles.grid_columns = " ".join(["1fr"] * config.grid_columns)
-
     def _purge_cache(self) -> None:
         from shared.paths import CACHE_DIR
         status = self.query_one("#purge-status", Static)

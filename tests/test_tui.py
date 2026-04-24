@@ -19,11 +19,11 @@ async def test_currency_widget_mounts(tmp_path, monkeypatch):
     from shared.config import DashboardConfig, save_config
     save_config(DashboardConfig(widgets=[]))
     from tui.widgets.currency_widget import CurrencyWidget
-    from textual.containers import Grid
+    from tui.widgets.gallery import WidgetGallery
     app = DashboardApp()
     async with app.run_test() as pilot:
         widget = CurrencyWidget("EUR/USD", "1M")
-        await pilot.app.query_one("#grid", Grid).mount(widget)
+        await pilot.app.query_one("#gallery", WidgetGallery).add_currency_widget(widget)
         await pilot.pause()
         assert pilot.app.query_one(CurrencyWidget)
 

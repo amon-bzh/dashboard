@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from textual.app import App, ComposeResult
-from textual.containers import Horizontal, ScrollableContainer, Grid, Vertical
+from textual.containers import Horizontal, Vertical
 from textual.widgets import Button, Footer, Label, TabbedContent, TabPane
 
 from shared.config import load_config
@@ -28,10 +28,6 @@ class DashboardApp(App):
         layers: base overlay;
         background: #1a1a2e;
     }
-    #grid {
-        layout: grid;
-        grid-gutter: 1;
-    }
     #bottom-bar {
         height: auto;
         padding: 0 1;
@@ -51,8 +47,8 @@ class DashboardApp(App):
         with TabbedContent():
             with TabPane("Dashboard", id="tab-dashboard"):
                 with Vertical():
-                    with ScrollableContainer():
-                        yield Grid(id="grid")
+                    from tui.widgets.gallery import WidgetGallery
+                    yield WidgetGallery(self._widget_height, id="gallery")
                     with Horizontal(id="bottom-bar"):
                         yield Button("[+] Ajouter une paire", id="btn-add", variant="default")
                         yield Button("↻ Charger les données", id="btn-fetch", variant="default")
@@ -69,12 +65,13 @@ class DashboardApp(App):
 
     def _load_widgets(self) -> None:
         from tui.widgets.currency_widget import CurrencyWidget
+        from tui.widgets.gallery import WidgetGallery
         config = load_config()
-        grid = self.query_one("#grid", Grid)
-        grid.styles.grid_size_columns = config.grid_columns
-        grid.styles.grid_columns = " ".join(["1fr"] * config.grid_columns)
-        for w in config.widgets:
-            grid.mount(CurrencyWidget(w.pair, w.scale, widget_height=self._widget_height))
+        gallery = self.query_one("#gallery", WidgetGallery)
+        gallery.load_widgets([
+            CurrencyWidget(w.pair, w.scale, widget_height=self._widget_height)
+            for w in config.widgets
+        ])
         logger.debug(f"{len(config.widgets)} widgets chargés")
 
     async def _poll_cache(self) -> None:
@@ -84,7 +81,6 @@ class DashboardApp(App):
 
     def on_button_pressed(self, event) -> None:
         btn_id = event.button.id
-
         if btn_id == "btn-add":
             self._handle_add_pair()
         elif btn_id == "btn-fetch":
@@ -98,14 +94,14 @@ class DashboardApp(App):
                 return
             new_pair, new_scale = result
             widget = CurrencyWidget(new_pair, new_scale, widget_height=self._widget_height)
-            await self.query_one("#grid", Grid).mount(widget)
+            from tui.widgets.gallery import WidgetGallery
+            await self.query_one("#gallery", WidgetGallery).add_currency_widget(widget)
             from shared.config import load_config, save_config, WidgetConfig
             config = load_config()
             config.widgets.append(WidgetConfig(new_pair, new_scale))
             save_config(config)
             from shared.config import notify_daemon
             notify_daemon()
-            # Charger uniquement les données pour cette nouvelle paire
             self._fetch_single_pair(new_pair, new_scale)
 
         self.push_screen(_EditPairModal("EUR/USD", "1M"), _handle)
