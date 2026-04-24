@@ -37,3 +37,16 @@ class WidgetGallery(VerticalScroll):
     def __init__(self, widget_height: int, **kwargs) -> None:
         super().__init__(**kwargs)
         self._widget_height = widget_height
+
+    def load_widgets(self, widgets: list) -> None:
+        """Charge un lot de CurrencyWidget en créant des rangées de 2."""
+        rows = []
+        for i in range(0, len(widgets), 2):
+            rows.append(GalleryRow(widget_height=self._widget_height, widgets=widgets[i:i + 2]))
+        if rows:
+            self.mount(*rows)
+
+    def all_currency_widgets(self) -> list:
+        """Retourne tous les CurrencyWidget dans l'ordre DOM (ordre d'affichage)."""
+        from tui.widgets.currency_widget import CurrencyWidget
+        return list(self.query(CurrencyWidget))
