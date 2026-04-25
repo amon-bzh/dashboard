@@ -19,3 +19,7 @@ def png_path(pair: str, scale: str) -> Path:
 
 def vix_png_path(scale: str) -> Path:
     return CACHE_DIR / f"VIX_{scale}.png"
+
+
+def fng_png_path() -> Path:
+    return CACHE_DIR / "FNG.png"
