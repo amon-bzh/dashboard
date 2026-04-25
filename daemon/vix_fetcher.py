@@ -5,6 +5,10 @@ from typing import Dict
 
 import yfinance as yf
 
+from logs.logger import get_logger
+
+logger = get_logger("daemon")
+
 SCALES: Dict[str, dict] = {
     "1M": {"period": "1mo", "interval": "1d"},
     "3M": {"period": "3mo", "interval": "1d"},
@@ -21,8 +25,13 @@ async def fetch_vix(scale: str) -> Dict[str, float]:
 
 
 def _fetch_vix_sync(scale: str) -> Dict[str, float]:
+    if scale not in SCALES:
+        raise ValueError(f"Échelle non supportée : {scale}. Valides : {list(SCALES)}")
     params = SCALES[scale]
+    logger.debug(f"[VIX] fetch ^VIX scale={scale} params={params}")
     df = yf.Ticker("^VIX").history(**params)
     if df.empty:
         raise ValueError(f"Aucune donnée VIX pour l'échelle {scale}")
-    return {str(idx.date()): float(row["Close"]) for idx, row in df.iterrows()}
+    result = {str(idx.date()): float(row["Close"]) for idx, row in df.iterrows()}
+    logger.debug(f"[VIX] {len(result)} points récupérés pour {scale}")
+    return result

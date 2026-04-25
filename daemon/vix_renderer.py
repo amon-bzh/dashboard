@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import json
 import matplotlib
+from logs.logger import get_logger
+
+logger = get_logger("daemon")
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -48,6 +51,7 @@ def render_vix_chart(rates: Dict[str, float], scale: str, output_path: Path) -> 
 
     variation_pct = round((values[-1] - values[0]) / values[0] * 100, 2)
     regime = "high" if values[-1] >= 30 else "elevated" if values[-1] >= 20 else "low"
+    logger.debug(f"[VIX] render {scale} → {output_path.name}  current={values[-1]:.2f}  {variation_pct:+.2f}%  regime={regime}")
     output_path.with_suffix(".json").write_text(json.dumps({
         "current": round(values[-1], 2),
         "variation_pct": variation_pct,
