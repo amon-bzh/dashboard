@@ -15,3 +15,7 @@ def ensure_dirs() -> None:
 def png_path(pair: str, scale: str) -> Path:
     base, quote = pair.split("/")
     return CACHE_DIR / f"{base}_{quote}_{scale}.png"
+
+
+def vix_png_path(scale: str) -> Path:
+    return CACHE_DIR / f"VIX_{scale}.png"
