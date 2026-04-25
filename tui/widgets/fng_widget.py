@@ -33,6 +33,10 @@ class FngWidget(Widget):
     FngWidget:focus {
         border: solid $primary;
     }
+    FngWidget:focus .fng-header {
+        color: $primary;
+        text-style: bold;
+    }
     .fng-header {
         height: 1;
         color: $text-muted;

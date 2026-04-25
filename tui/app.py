@@ -129,7 +129,7 @@ class DashboardApp(App):
         config = load_config()
         status = self.query_one("#fetch-status", Label)
         pairs = config.widgets
-        status.update(f"⏳ {len(pairs)} paire(s) + VIX...")
+        status.update(f"⏳ {len(pairs)} paire(s) + VIX + F&G...")
         for i, w in enumerate(pairs, 1):
             status.update(f"⏳ {w.pair} {w.scale} ({i}/{len(pairs)})...")
             await self._do_fetch(w.pair, w.scale)
