@@ -131,7 +131,7 @@ class ChartDisplay(Widget):
         new_pos = (region.x, region.y, w, display_h)
         if self._prev_image_pos is not None and self._prev_image_pos != new_pos:
             px, py, pw, ph = self._prev_image_pos
-            # Effacer avec la couleur de fond de l'app (#1a1a2e = 26,26,46)
+            # Effacer avec la couleur de fond de l'app (#05070a = 5,7,10)
             sys.__stdout__.write("\x1b[48;2;5;7;10m")
             for row in range(ph):
                 sys.__stdout__.write(f"\x1b[{py + 1 + row};{px + 1}H" + " " * pw)
