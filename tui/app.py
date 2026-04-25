@@ -56,6 +56,9 @@ class DashboardApp(App):
             with TabPane("VIX", id="tab-vix"):
                 from tui.widgets.vix_widget import VixWidget
                 yield VixWidget(scale="1M", id="vix-widget")
+            with TabPane("F&G", id="tab-fng"):
+                from tui.widgets.fng_widget import FngWidget
+                yield FngWidget(id="fng-widget")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -81,9 +84,12 @@ class DashboardApp(App):
     async def _poll_cache(self) -> None:
         from tui.widgets.currency_widget import CurrencyWidget
         from tui.widgets.vix_widget import VixWidget
+        from tui.widgets.fng_widget import FngWidget
         for widget in self.query(CurrencyWidget):
             widget.refresh_if_updated()
         for widget in self.query(VixWidget):
+            widget.refresh_if_updated()
+        for widget in self.query(FngWidget):
             widget.refresh_if_updated()
 
     def on_button_pressed(self, event) -> None:
@@ -129,6 +135,8 @@ class DashboardApp(App):
             await self._do_fetch(w.pair, w.scale)
         status.update("⏳ VIX...")
         await self._do_fetch_vix()
+        status.update("⏳ F&G...")
+        await self._do_fetch_fng()
         status.update("✓ Données à jour")
         self.set_timer(3, lambda: status.update(""))
 
@@ -145,6 +153,19 @@ class DashboardApp(App):
             except Exception as exc:
                 logger.error(f"Échec VIX {scale}: {exc}")
                 render_vix_error_chart(str(exc), path)
+
+    async def _do_fetch_fng(self) -> None:
+        from daemon.fng_fetcher import fetch_fng
+        from daemon.fng_renderer import render_fng_chart, render_fng_error_chart
+        from shared.paths import fng_png_path
+        path = fng_png_path()
+        try:
+            data = await fetch_fng()
+            render_fng_chart(data, path)
+            logger.info("F&G chargé")
+        except Exception as exc:
+            logger.error(f"Échec F&G: {exc}")
+            render_fng_error_chart(str(exc), path)
 
     async def _do_fetch_one(self, pair: str, scale: str) -> None:
         status = self.query_one("#fetch-status", Label)

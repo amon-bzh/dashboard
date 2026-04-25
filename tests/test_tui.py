@@ -154,3 +154,18 @@ async def test_vix_tab_mounts_vix_widget(tmp_path, monkeypatch):
         await pilot.click("#tab-vix")
         await pilot.pause()
         assert pilot.app.query_one(VixWidget)
+
+
+@pytest.mark.asyncio
+async def test_fng_tab_mounts_fng_widget(tmp_path, monkeypatch):
+    import shared.paths as p
+    monkeypatch.setattr(p, "CACHE_DIR", tmp_path)
+    monkeypatch.setattr(p, "CONFIG_FILE", tmp_path / "config.json")
+    from shared.config import DashboardConfig, save_config
+    save_config(DashboardConfig(widgets=[]))
+    from tui.widgets.fng_widget import FngWidget
+    app = DashboardApp()
+    async with app.run_test() as pilot:
+        await pilot.click("#tab-fng")
+        await pilot.pause()
+        assert pilot.app.query_one(FngWidget)
