@@ -9,11 +9,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict
 
-_BG = "#1a1a2e"
-_GREEN = "#00c896"
-_RED = "#ff6b6b"
-_GRID = "#2a2a4a"
-_TICK = "#888888"
+_BG = "#05070a"
+_GREEN = "#4ade80"
+_RED = "#ef4444"
+_GRID = "#6b6355"
+_TICK = "#c9bfa8"
 
 
 def render_chart(

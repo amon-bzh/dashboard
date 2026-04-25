@@ -26,7 +26,7 @@ class DashboardApp(App):
     CSS = """
     Screen {
         layers: base overlay;
-        background: #1a1a2e;
+        color: #c9bfa8;
     }
     #bottom-bar {
         height: auto;
@@ -59,6 +59,9 @@ class DashboardApp(App):
         yield Footer()
 
     def on_mount(self) -> None:
+        from tui.theme import BLOOMBERG
+        self.register_theme(BLOOMBERG)
+        self.theme = "bloomberg"
         self._load_widgets()
         self.set_interval(5, self._poll_cache)
         self.call_after_refresh(self._poll_cache)

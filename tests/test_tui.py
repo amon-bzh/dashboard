@@ -72,3 +72,10 @@ async def test_config_screen_saves_config(tmp_path, monkeypatch):
     from shared.config import load_config
     cfg = load_config()
     assert "30" in str(cfg.refresh_interval_minutes)
+
+
+@pytest.mark.asyncio
+async def test_app_uses_bloomberg_theme():
+    app = DashboardApp()
+    async with app.run_test() as pilot:
+        assert pilot.app.theme == "bloomberg"
