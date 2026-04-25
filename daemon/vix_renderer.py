@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import json
 import matplotlib
-from logs.logger import get_logger
-
-logger = get_logger("daemon")
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from datetime import datetime
 from pathlib import Path
+from logs.logger import get_logger
+
+logger = get_logger("daemon")
 from typing import Dict
 
 _BG    = "#05070a"
