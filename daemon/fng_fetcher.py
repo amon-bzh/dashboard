@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict
 
 import httpx
@@ -27,7 +27,7 @@ async def fetch_fng(limit: int = 31) -> Dict[str, Any]:
     history = {}
     for entry in data:
         ts = int(entry["timestamp"])
-        d = str(datetime.fromtimestamp(ts).date())
+        d = str(datetime.fromtimestamp(ts, tz=timezone.utc).date())
         history[d] = int(entry["value"])
 
     newest = data[0]
