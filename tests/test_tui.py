@@ -71,7 +71,7 @@ async def test_config_screen_saves_config(tmp_path, monkeypatch):
 
     from shared.config import load_config
     cfg = load_config()
-    assert "30" in str(cfg.refresh_interval_minutes)
+    assert cfg.refresh_interval_minutes == 30
 
 
 @pytest.mark.asyncio
