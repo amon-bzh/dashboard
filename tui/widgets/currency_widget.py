@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import base64
-import math
 import sys
 from pathlib import Path
 
@@ -119,14 +118,7 @@ class ChartDisplay(Widget):
         )
         if w == 0 or h == 0:
             return
-        ratio = getattr(self.app, "cell_ratio", 0.477)
-        display_h_exact = w * ratio / (8 / 3)
-        display_h = max(1, min(h, math.ceil(display_h_exact)))
-        logger.debug(
-            f"[cadre] {self.image_path.name} : "
-            f"ChartDisplay={w}×{h}  ratio={ratio:.4f}  "
-            f"display_h_exact={display_h_exact:.2f}  display_h={display_h}"
-        )
+        display_h = h
         # Effacer l'ancienne zone si le widget a bougé (scroll)
         new_pos = (region.x, region.y, w, display_h)
         if self._prev_image_pos is not None and self._prev_image_pos != new_pos:

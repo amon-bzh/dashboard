@@ -19,7 +19,6 @@ class WidgetConfig:
 class DashboardConfig:
     base_currency: str = "EUR"
     refresh_interval_minutes: int = 60
-    terminal_cell_ratio: float = 0.477
     widgets: List[WidgetConfig] = field(
         default_factory=lambda: [
             WidgetConfig("EUR/USD", "1M"),
@@ -36,6 +35,7 @@ def load_config() -> DashboardConfig:
         return cfg
     data = json.loads(paths.CONFIG_FILE.read_text())
     data.pop("grid_columns", None)  # rétrocompatibilité : champ supprimé
+    data.pop("terminal_cell_ratio", None)  # rétrocompatibilité : champ supprimé
     widgets = [WidgetConfig(**w) for w in data.pop("widgets", [])]
     return DashboardConfig(**data, widgets=widgets)
 

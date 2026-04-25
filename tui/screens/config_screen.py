@@ -27,10 +27,6 @@ class ConfigScreen(Widget):
     #btn-apply {
         margin-top: 2;
     }
-    #cell-ratio-hint {
-        color: $text-disabled;
-        margin-bottom: 1;
-    }
     #btn-purge {
         margin-top: 1;
         border: solid red;
@@ -55,15 +51,6 @@ class ConfigScreen(Widget):
             id="input-refresh",
             type="integer",
         )
-        yield Label("Ratio cellule terminal (cell_w / cell_h) — ex: 0.5 pour police 8×16")
-        yield Input(
-            value=str(config.terminal_cell_ratio),
-            id="input-cell-ratio",
-        )
-        yield Static(
-            "↻ Le ratio cellule est appliqué au prochain démarrage",
-            id="cell-ratio-hint",
-        )
         yield Button("Appliquer", id="btn-apply", variant="primary")
         yield Button("🗑 Purger la base de données", id="btn-purge", variant="error")
         yield Static("", id="purge-status")
@@ -81,9 +68,6 @@ class ConfigScreen(Widget):
         try:
             config.refresh_interval_minutes = int(
                 self.query_one("#input-refresh", Input).value
-            )
-            config.terminal_cell_ratio = float(
-                self.query_one("#input-cell-ratio", Input).value
             )
         except ValueError:
             logger.warning("Valeurs de configuration invalides")
