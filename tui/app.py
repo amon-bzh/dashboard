@@ -53,6 +53,9 @@ class DashboardApp(App):
             with TabPane("Configuration", id="tab-config"):
                 from tui.screens.config_screen import ConfigScreen
                 yield ConfigScreen()
+            with TabPane("VIX", id="tab-vix"):
+                from tui.widgets.vix_widget import VixWidget
+                yield VixWidget(scale="1M", id="vix-widget")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -77,7 +80,10 @@ class DashboardApp(App):
 
     async def _poll_cache(self) -> None:
         from tui.widgets.currency_widget import CurrencyWidget
+        from tui.widgets.vix_widget import VixWidget
         for widget in self.query(CurrencyWidget):
+            widget.refresh_if_updated()
+        for widget in self.query(VixWidget):
             widget.refresh_if_updated()
 
     def on_button_pressed(self, event) -> None:
@@ -117,12 +123,28 @@ class DashboardApp(App):
         config = load_config()
         status = self.query_one("#fetch-status", Label)
         pairs = config.widgets
-        status.update(f"⏳ Chargement de {len(pairs)} paire(s)...")
+        status.update(f"⏳ {len(pairs)} paire(s) + VIX...")
         for i, w in enumerate(pairs, 1):
             status.update(f"⏳ {w.pair} {w.scale} ({i}/{len(pairs)})...")
             await self._do_fetch(w.pair, w.scale)
+        status.update("⏳ VIX...")
+        await self._do_fetch_vix()
         status.update("✓ Données à jour")
         self.set_timer(3, lambda: status.update(""))
+
+    async def _do_fetch_vix(self) -> None:
+        from daemon.vix_fetcher import fetch_vix, SCALES as VIX_SCALES
+        from daemon.vix_renderer import render_vix_chart, render_vix_error_chart
+        from shared.paths import vix_png_path
+        for scale in VIX_SCALES:
+            path = vix_png_path(scale)
+            try:
+                rates = await fetch_vix(scale)
+                render_vix_chart(rates, scale, path)
+                logger.info(f"VIX {scale} chargé")
+            except Exception as exc:
+                logger.error(f"Échec VIX {scale}: {exc}")
+                render_vix_error_chart(str(exc), path)
 
     async def _do_fetch_one(self, pair: str, scale: str) -> None:
         status = self.query_one("#fetch-status", Label)
