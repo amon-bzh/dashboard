@@ -79,3 +79,44 @@ async def test_app_uses_bloomberg_theme():
     app = DashboardApp()
     async with app.run_test() as pilot:
         assert pilot.app.theme == "bloomberg"
+
+
+@pytest.mark.asyncio
+async def test_key_k_deletes_currency_widget(tmp_path, monkeypatch):
+    import shared.paths as p
+    monkeypatch.setattr(p, "CACHE_DIR", tmp_path)
+    monkeypatch.setattr(p, "CONFIG_FILE", tmp_path / "config.json")
+    from shared.config import DashboardConfig, WidgetConfig, save_config
+    save_config(DashboardConfig(widgets=[
+        WidgetConfig("EUR/USD", "1M"),
+        WidgetConfig("EUR/GBP", "1M"),
+    ]))
+    from tui.widgets.currency_widget import CurrencyWidget
+    app = DashboardApp()
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        widgets = list(pilot.app.query(CurrencyWidget))
+        assert len(widgets) == 2
+        widgets[0].focus()
+        await pilot.press("k")
+        await pilot.pause()
+        assert len(list(pilot.app.query(CurrencyWidget))) == 1
+
+
+@pytest.mark.asyncio
+async def test_tab_cycles_period_forward(tmp_path, monkeypatch):
+    import shared.paths as p
+    monkeypatch.setattr(p, "CACHE_DIR", tmp_path)
+    monkeypatch.setattr(p, "CONFIG_FILE", tmp_path / "config.json")
+    from shared.config import DashboardConfig, WidgetConfig, save_config
+    save_config(DashboardConfig(widgets=[WidgetConfig("EUR/USD", "1M")]))
+    from tui.widgets.currency_widget import CurrencyWidget
+    app = DashboardApp()
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        w = pilot.app.query_one(CurrencyWidget)
+        assert w.scale == "1M"
+        w.focus()
+        await pilot.press("tab")
+        await pilot.pause()
+        assert w.scale == "3M"

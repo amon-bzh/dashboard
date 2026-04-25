@@ -231,6 +231,9 @@ class CurrencyWidget(Widget):
     BINDINGS = [
         ("m", "open_menu", "Menu"),
         ("p", "cycle_period", "Période"),
+        ("tab", "cycle_period", "Période suiv."),
+        ("shift+tab", "cycle_period_back", "Période préc."),
+        ("k", "delete_widget", "Supprimer"),
     ]
 
     def action_open_menu(self) -> None:
@@ -255,6 +258,22 @@ class CurrencyWidget(Widget):
         self._update_config()
         from shared.config import notify_daemon
         notify_daemon()
+
+    def action_cycle_period_back(self) -> None:
+        try:
+            idx = self._PERIODS.index(self.scale)
+        except ValueError:
+            idx = 0
+        self.scale = self._PERIODS[(idx - 1) % len(self._PERIODS)]
+        self._png_path = png_path(self.pair, self.scale)
+        self._last_mtime = 0.0
+        self.query_one(".header", Label).update(f"{self.pair} · {self.scale}")
+        self._update_config()
+        from shared.config import notify_daemon
+        notify_daemon()
+
+    def action_delete_widget(self) -> None:
+        self.post_message(CurrencyWidget.RequestDelete(self))
 
     class RequestDelete(Message):
         """Demande à la galerie parente de supprimer ce widget et de nettoyer la rangée."""

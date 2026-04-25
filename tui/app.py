@@ -12,8 +12,6 @@ logger = get_logger("tui")
 
 class DashboardApp(App):
     BINDINGS = [
-        ("tab", "focus_next", "Cadre suivant"),
-        ("shift+tab", "focus_previous", "Cadre précédent"),
         ("q", "quit", "Quitter"),
     ]
 
