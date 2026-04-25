@@ -263,7 +263,7 @@ class CurrencyWidget(Widget):
         try:
             idx = self._PERIODS.index(self.scale)
         except ValueError:
-            idx = 0
+            idx = 0  # échelle inconnue : on part de la première → wrap arrière vers la dernière
         self.scale = self._PERIODS[(idx - 1) % len(self._PERIODS)]
         self._png_path = png_path(self.pair, self.scale)
         self._last_mtime = 0.0

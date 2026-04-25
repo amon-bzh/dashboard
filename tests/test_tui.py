@@ -120,3 +120,22 @@ async def test_tab_cycles_period_forward(tmp_path, monkeypatch):
         await pilot.press("tab")
         await pilot.pause()
         assert w.scale == "3M"
+
+
+@pytest.mark.asyncio
+async def test_shift_tab_cycles_period_back(tmp_path, monkeypatch):
+    import shared.paths as p
+    monkeypatch.setattr(p, "CACHE_DIR", tmp_path)
+    monkeypatch.setattr(p, "CONFIG_FILE", tmp_path / "config.json")
+    from shared.config import DashboardConfig, WidgetConfig, save_config
+    save_config(DashboardConfig(widgets=[WidgetConfig("EUR/USD", "3M")]))
+    from tui.widgets.currency_widget import CurrencyWidget
+    app = DashboardApp()
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        w = pilot.app.query_one(CurrencyWidget)
+        assert w.scale == "3M"
+        w.focus()
+        await pilot.press("shift+tab")
+        await pilot.pause()
+        assert w.scale == "1M"
